@@ -1,9 +1,13 @@
 from datetime import datetime
 from flask import Flask, request
+from flask_sqlalchemy import SQLAlchemy
 
-from app.database import delete, scan, read, insert, update, delete
 
 app = Flask(__name__)
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///mydb.db"
+db = SQLAlchemy(app)
+
+from app.database import User
 
 
 @app.route("/")
@@ -21,8 +25,18 @@ def get_all_users():
         "status": "ok",
         "message": "Success",
     }
-    out["body"] = scan()
-    return out
+    users = User.query.all()                                      # returns all users in table
+    out["body"] = []                                             # creates an empty list to later fill
+    for user in users:                                           # loop for each user in users
+        user_dict = {}                                            # temp dict to store each user
+        user_dict["id"] = user.id                                  # map each attribute to corresponding key
+        user_dict["first_name"] = user.first_name
+        user_dict["last_name"] = user.last_name
+        user_dict["hobbies"] = user.hobbies
+        user_dict["active"] = user.active
+        out["body"].append(user_dict)                           # append the temp dict to our body list
+    
+    return out                                                  # return the list with all our pushed dicts
 
 @app.route("/users/<int:pk>")
 def get_single_user(pk):
@@ -30,7 +44,16 @@ def get_single_user(pk):
         "status": "ok",
         "message": "Success"
     }
-    out["body"] = read(pk)
+    user = User.query.filter_by(id=pk).first()
+    out["body"] = {
+        "user": {
+            "id": user.id,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "hobbies": user.hobbies,
+            "active": user.active
+            }
+        }
     return out
 
 
@@ -41,11 +64,15 @@ def create_user():
         "message": "Success"
     }
     user_data = request.json
-    out["user_id"] = insert(
-        user_data.get("first_name"),
-        user_data.get("last_name"),
-        user_data.get("hobbies")
-    )
+    db.session.add(
+        User(
+            first_name=user_data.get("first_name"),
+            last_name=user_data.get("last_name"),
+            hobbies=user_data.get("hobbies")
+            )
+        )
+    db.session.commit()
+    
     return out, 201
 
 
