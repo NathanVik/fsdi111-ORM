@@ -83,25 +83,29 @@ def update_user():
         "message": "Success"
     }
     user_data = request.json
-    out["user_id"] = update(
-        user_data.get("id"),
-        user_data.get("first_name"),
-        user_data.get("last_name"),
-        user_data.get("hobbies")
-    )
+    this_user = User.query.filter_by(id=user_data.get("id")).first()
+    this_user.first_name = user_data.get("first_name")
+    this_user.last_name=user_data.get("last_name")
+    this_user.hobbies=user_data.get("hobbies")
+    db.session.commit()
+
     return out
 
-@app.route("/delete", methods=["PUT"])
+
+@app.route("/delete", methods=["PUT"]) # a put request to the /delete route, provide a user ID and it gets set to active=0
 def delete_user():
     out = {
         "status": "ok",
         "message": "Success"
     }
     user_data = request.json
-    out["user_id"] = delete(
-        user_data.get("id")
-        )
+    this_user = User.query.filter_by(id=user_data.get("id")).first()
+    this_user.active = 0
+    db.session.commit()
+
     return out
+
+
 
 @app.route("/agent")
 def agent():
