@@ -1,5 +1,5 @@
 from datetime import datetime
-from flask import Flask, request
+from flask import Flask, request, render_template
 from flask_sqlalchemy import SQLAlchemy
 
 
@@ -17,7 +17,7 @@ def home():
         "message": "Success",
         "server_time": datetime.now().strftime("%F %H:%M:%S")
     }
-    return out
+    return render_template("home.html", data=out)
 
 @app.route("/users")
 def get_all_users():
@@ -36,25 +36,15 @@ def get_all_users():
         user_dict["active"] = user.active
         out["body"].append(user_dict)                           # append the temp dict to our body list
     
-    return out                                                  # return the list with all our pushed dicts
+    return render_template("user_list.html", data=out)                                                  # return the list with all our pushed dicts
 
 @app.route("/users/<int:pk>")
 def get_single_user(pk):
-    out = {
-        "status": "ok",
-        "message": "Success"
-    }
-    user = User.query.filter_by(id=pk).first()
-    out["body"] = {
-        "user": {
-            "id": user.id,
-            "first_name": user.first_name,
-            "last_name": user.last_name,
-            "hobbies": user.hobbies,
-            "active": user.active
-            }
-        }
-    return out
+    user = User.query.filter_by(id=pk).first()   #will return NoneType if there isn't a user with that PK
+    if user:                                    # if user is not None -> returns the page
+        return render_template("user_detail.html", data=user)
+    return render_template("404.html"), 404
+
 
 
 @app.route("/users", methods=["POST"])
@@ -106,9 +96,18 @@ def delete_user():
     return out
 
 
-
 @app.route("/agent")
 def agent():
     user_agent = request.headers.get("User-Agent")
     return "<p>Your user agent is %s" % user_agent
 
+
+# @app.route("/greeting/<user_name>")
+# def greet_user(user_name):
+#     return render_template("home.html", name=user_name)
+
+## ERROR HANDLING ##
+
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template("404.html"), 404

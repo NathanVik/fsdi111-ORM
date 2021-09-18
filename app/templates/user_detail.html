@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block title %}User {{ data.id }}{% endblock title %}
+
+{% block content %}
+
+    <h1>User Full Name: {{ data.first_name }} {{ data.last_name }}</h1>
+    <p>User ID: {{ data.id }}</p>
+    <p>Hobbies are: {{ data.hobbies }}</p>
+        <p>Currently Active: 
+            {% if data.active == 1 %}
+                Yes 
+            {% else %} 
+                No
+            {% endif %}
+        </p>
+    <a class="btn btn-primary">Edit User</a>
+    <a class="btn btn-danger">Delete User</a>
+{% endblock content %}
